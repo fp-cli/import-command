@@ -1,8 +1,8 @@
 {
-    "name": "wp-cli/import-command",
-    "type": "wp-cli-package",
+    "name": "fp-cli/import-command",
+    "type": "fp-cli-package",
     "description": "Imports content from a given WXR file.",
-    "homepage": "https://github.com/wp-cli/import-command",
+    "homepage": "https://github.com/fp-cli/import-command",
     "license": "MIT",
     "authors": [
         {
@@ -12,14 +12,14 @@
         }
     ],
     "require": {
-        "wp-cli/wp-cli": "^2.12"
+        "fp-cli/fp-cli": "^2.12"
     },
     "require-dev": {
         "wordpress/wordpress-importer": "^0.9",
-        "wp-cli/entity-command": "^1.3 || ^2",
-        "wp-cli/export-command": "^1 || ^2",
-        "wp-cli/extension-command": "^1.2 || ^2",
-        "wp-cli/wp-cli-tests": "^5"
+        "fp-cli/entity-command": "^1.3 || ^2",
+        "fp-cli/export-command": "^1 || ^2",
+        "fp-cli/extension-command": "^1.2 || ^2",
+        "fp-cli/fp-cli-tests": "^5"
     },
     "repositories": [
         {
@@ -74,6 +74,6 @@
         ]
     },
     "support": {
-        "issues": "https://github.com/wp-cli/import-command/issues"
+        "issues": "https://github.com/fp-cli/import-command/issues"
     }
 }

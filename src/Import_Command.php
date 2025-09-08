@@ -28,7 +28,7 @@ class Import_Command extends WP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Import content from a WXR file
-	 *     $ wp import example.wordpress.2016-06-21.xml --authors=create
+	 *     $ fp import example.wordpress.2016-06-21.xml --authors=create
 	 *     Starting the import process...
 	 *     Processing post #1 ("Hello world!") (post_type: post)
 	 *     -- 1 of 1
@@ -307,7 +307,7 @@ class Import_Command extends WP_CLI_Command {
 	 * Determines whether the requested importer is available.
 	 */
 	private function is_importer_available() {
-		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		require_once ABSPATH . 'fp-admin/includes/plugin.php';
 
 		if ( class_exists( 'WP_Import' ) ) {
 			return true;
@@ -316,9 +316,9 @@ class Import_Command extends WP_CLI_Command {
 		$plugins            = get_plugins();
 		$wordpress_importer = 'wordpress-importer/wordpress-importer.php';
 		if ( array_key_exists( $wordpress_importer, $plugins ) ) {
-			$error_msg = "WordPress Importer needs to be activated. Try 'wp plugin activate wordpress-importer'.";
+			$error_msg = "WordPress Importer needs to be activated. Try 'fp plugin activate wordpress-importer'.";
 		} else {
-			$error_msg = "WordPress Importer needs to be installed. Try 'wp plugin install wordpress-importer --activate'.";
+			$error_msg = "WordPress Importer needs to be installed. Try 'fp plugin install wordpress-importer --activate'.";
 		}
 
 		return new WP_Error( 'importer-missing', $error_msg );

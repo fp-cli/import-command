@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="WP-CLI-import">
-	<description>Custom ruleset for WP-CLI import-command</description>
+<ruleset name="FP-CLI-import">
+	<description>Custom ruleset for FP-CLI import-command</description>
 
 	<!--
 	#############################################################################
@@ -30,7 +30,7 @@
 
 	<rule ref="WP_CLI_CS">
 		<!-- The two instances which trigger this sniff in this project are example filenames in documentation. -->
-		<exclude name="WordPress.WP.CapitalPDangit" />
+		<exclude name="WordPress.FP.CapitalPDangit" />
 	</rule>
 
 	<!--
