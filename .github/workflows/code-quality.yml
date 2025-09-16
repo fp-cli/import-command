@@ -9,4 +9,4 @@ on:
 
 jobs:
   code-quality:
-    uses: fp-cli/.github/.github/workflows/reusable-code-quality.yml@main
+    uses: fin-cli/.github/.github/workflows/reusable-code-quality.yml@main

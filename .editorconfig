@@ -22,5 +22,5 @@ indent_size = 2
 [*.md]
 trim_trailing_whitespace = false
 
-[{*.txt,fp-config-sample.php}]
+[{*.txt,fin-config-sample.php}]
 end_of_line = crlf

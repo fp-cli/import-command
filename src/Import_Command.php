@@ -1,6 +1,6 @@
 <?php
 
-class Import_Command extends WP_CLI_Command {
+class Import_Command extends FIN_CLI_Command {
 
 	private $blog_users = array();
 
@@ -28,7 +28,7 @@ class Import_Command extends WP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Import content from a WXR file
-	 *     $ fp import example.wordpress.2016-06-21.xml --authors=create
+	 *     $ fin import example.wordpress.2016-06-21.xml --authors=create
 	 *     Starting the import process...
 	 *     Processing post #1 ("Hello world!") (post_type: post)
 	 *     -- 1 of 1
@@ -41,25 +41,25 @@ class Import_Command extends WP_CLI_Command {
 			'authors' => null,
 			'skip'    => array(),
 		);
-		$assoc_args = wp_parse_args( $assoc_args, $defaults );
+		$assoc_args = fin_parse_args( $assoc_args, $defaults );
 
 		if ( ! is_array( $assoc_args['skip'] ) ) {
 			$assoc_args['skip'] = explode( ',', $assoc_args['skip'] );
 		}
 
 		$importer = $this->is_importer_available();
-		if ( is_wp_error( $importer ) ) {
-			WP_CLI::error( $importer );
+		if ( is_fin_error( $importer ) ) {
+			FIN_CLI::error( $importer );
 		}
 
 		$this->add_wxr_filters();
 
-		WP_CLI::log( 'Starting the import process...' );
+		FIN_CLI::log( 'Starting the import process...' );
 
 		$new_args = array();
 		foreach ( $args as $arg ) {
 			if ( is_dir( $arg ) ) {
-				$dir   = WP_CLI\Utils\trailingslashit( $arg );
+				$dir   = FIN_CLI\Utils\trailingslashit( $arg );
 				$files = glob( $dir . '*.wxr' );
 				if ( ! empty( $files ) ) {
 					$new_args = array_merge( $new_args, $files );
@@ -71,11 +71,11 @@ class Import_Command extends WP_CLI_Command {
 				}
 
 				if ( empty( $files ) ) {
-					WP_CLI::warning( "No files found in the import directory '$arg'." );
+					FIN_CLI::warning( "No files found in the import directory '$arg'." );
 				}
 			} else {
 				if ( ! file_exists( $arg ) ) {
-					WP_CLI::warning( "File '$arg' doesn't exist." );
+					FIN_CLI::warning( "File '$arg' doesn't exist." );
 					continue;
 				}
 
@@ -84,12 +84,12 @@ class Import_Command extends WP_CLI_Command {
 					continue;
 				}
 
-				WP_CLI::warning( "Cannot read file '$arg'." );
+				FIN_CLI::warning( "Cannot read file '$arg'." );
 			}
 		}
 
 		if ( empty( $new_args ) ) {
-			WP_CLI::error( 'Import failed due to missing or unreadable file/s.' );
+			FIN_CLI::error( 'Import failed due to missing or unreadable file/s.' );
 		}
 
 		$args = $new_args;
@@ -98,11 +98,11 @@ class Import_Command extends WP_CLI_Command {
 
 			$ret = $this->import_wxr( $file, $assoc_args );
 
-			if ( is_wp_error( $ret ) ) {
-				WP_CLI::error( $ret );
+			if ( is_fin_error( $ret ) ) {
+				FIN_CLI::error( $ret );
 			} else {
-				WP_CLI::log( '' ); // WXR import ends with HTML, so make sure message is on next line
-				WP_CLI::success( "Finished importing from '$file' file." );
+				FIN_CLI::log( '' ); // WXR import ends with HTML, so make sure message is on next line
+				FIN_CLI::success( "Finished importing from '$file' file." );
 			}
 		}
 	}
@@ -112,19 +112,19 @@ class Import_Command extends WP_CLI_Command {
 	 */
 	private function import_wxr( $file, $args ) {
 
-		$wp_import                  = new WP_Import();
-		$wp_import->processed_posts = $this->processed_posts;
-		$import_data                = $wp_import->parse( $file );
+		$fin_import                  = new FIN_Import();
+		$fin_import->processed_posts = $this->processed_posts;
+		$import_data                = $fin_import->parse( $file );
 
 		// Prepare the data to be used in process_author_mapping();
-		$wp_import->get_authors_from_import( $import_data );
+		$fin_import->get_authors_from_import( $import_data );
 
 		// We no longer need the original data, so unset to avoid using excess
 		// memory.
 		unset( $import_data );
 
 		$author_data = array();
-		foreach ( $wp_import->authors as $wxr_author ) {
+		foreach ( $fin_import->authors as $wxr_author ) {
 			$author = new \stdClass();
 			// Always in the WXR
 			$author->user_login = $wxr_author['author_login'];
@@ -147,17 +147,17 @@ class Import_Command extends WP_CLI_Command {
 		}
 
 		/**
-		 * @var array<\WP_User> $author_data
+		 * @var array<\FIN_User> $author_data
 		 */
 
 		// Build the author mapping
 		$author_mapping = $this->process_author_mapping( $args['authors'], $author_data );
-		if ( is_wp_error( $author_mapping ) ) {
+		if ( is_fin_error( $author_mapping ) ) {
 			return $author_mapping;
 		}
 
-		$author_in  = wp_list_pluck( $author_mapping, 'old_user_login' );
-		$author_out = wp_list_pluck( $author_mapping, 'new_user_login' );
+		$author_in  = fin_list_pluck( $author_mapping, 'old_user_login' );
+		$author_out = fin_list_pluck( $author_mapping, 'new_user_login' );
 		unset( $author_mapping, $author_data );
 
 		// $user_select needs to be an array of user IDs
@@ -172,13 +172,13 @@ class Import_Command extends WP_CLI_Command {
 			}
 		}
 		if ( ! empty( $invalid_user_select ) ) {
-			return new WP_Error( 'invalid-author-mapping', sprintf( 'These user_logins are invalid: %s', implode( ',', $invalid_user_select ) ) );
+			return new FIN_Error( 'invalid-author-mapping', sprintf( 'These user_logins are invalid: %s', implode( ',', $invalid_user_select ) ) );
 		}
 
 		unset( $author_out );
 
 		// Drive the import
-		$wp_import->fetch_attachments = ! in_array( 'attachment', $args['skip'], true );
+		$fin_import->fetch_attachments = ! in_array( 'attachment', $args['skip'], true );
 
 		$_GET  = array(
 			'import' => 'wordpress',
@@ -187,16 +187,16 @@ class Import_Command extends WP_CLI_Command {
 		$_POST = array(
 			'imported_authors'  => $author_in,
 			'user_map'          => $user_select,
-			'fetch_attachments' => $wp_import->fetch_attachments,
+			'fetch_attachments' => $fin_import->fetch_attachments,
 		);
 
 		if ( in_array( 'image_resize', $args['skip'], true ) ) {
 			add_filter( 'intermediate_image_sizes_advanced', array( $this, 'filter_set_image_sizes' ) );
 		}
 
-		$GLOBALS['wpcli_import_current_file'] = basename( $file );
-		$wp_import->import( $file );
-		$this->processed_posts += $wp_import->processed_posts;
+		$GLOBALS['fincli_import_current_file'] = basename( $file );
+		$fin_import->import( $file );
+		$this->processed_posts += $fin_import->processed_posts;
 
 		return true;
 	}
@@ -212,91 +212,91 @@ class Import_Command extends WP_CLI_Command {
 	private function add_wxr_filters() {
 
 		add_filter(
-			'wp_import_posts',
+			'fin_import_posts',
 			function ( $posts ) {
-				global $wpcli_import_counts;
-				$wpcli_import_counts['current_post'] = 0;
-				$wpcli_import_counts['total_posts']  = count( $posts );
+				global $fincli_import_counts;
+				$fincli_import_counts['current_post'] = 0;
+				$fincli_import_counts['total_posts']  = count( $posts );
 				return $posts;
 			},
 			10
 		);
 
 		add_filter(
-			'wp_import_post_comments',
+			'fin_import_post_comments',
 			function ( $comments ) {
-				global $wpcli_import_counts;
-				$wpcli_import_counts['current_comment'] = 0;
-				$wpcli_import_counts['total_comments']  = count( $comments );
+				global $fincli_import_counts;
+				$fincli_import_counts['current_comment'] = 0;
+				$fincli_import_counts['total_comments']  = count( $comments );
 				return $comments;
 			}
 		);
 
 		add_filter(
-			'wp_import_post_data_raw',
+			'fin_import_post_data_raw',
 			function ( $post ) {
-				global $wpcli_import_counts, $wpcli_import_current_file;
+				global $fincli_import_counts, $fincli_import_current_file;
 
-				$wpcli_import_counts['current_post']++;
-				WP_CLI::log( '' );
-				WP_CLI::log( '' );
-				WP_CLI::log( sprintf( 'Processing post #%d ("%s") (post_type: %s)', $post['post_id'], $post['post_title'], $post['post_type'] ) );
-				WP_CLI::log( sprintf( '-- %s of %s (in file %s)', number_format( $wpcli_import_counts['current_post'] ), number_format( $wpcli_import_counts['total_posts'] ), $wpcli_import_current_file ) );
-				WP_CLI::log( '-- ' . date( 'r' ) ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
+				$fincli_import_counts['current_post']++;
+				FIN_CLI::log( '' );
+				FIN_CLI::log( '' );
+				FIN_CLI::log( sprintf( 'Processing post #%d ("%s") (post_type: %s)', $post['post_id'], $post['post_title'], $post['post_type'] ) );
+				FIN_CLI::log( sprintf( '-- %s of %s (in file %s)', number_format( $fincli_import_counts['current_post'] ), number_format( $fincli_import_counts['total_posts'] ), $fincli_import_current_file ) );
+				FIN_CLI::log( '-- ' . date( 'r' ) ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 
 				return $post;
 			}
 		);
 
 		add_action(
-			'wp_import_insert_post',
+			'fin_import_insert_post',
 			function ( $post_id ) {
-				global $wpcli_import_counts;
-				if ( is_wp_error( $post_id ) ) {
-					WP_CLI::warning( '-- Error importing post: ' . $post_id->get_error_code() );
+				global $fincli_import_counts;
+				if ( is_fin_error( $post_id ) ) {
+					FIN_CLI::warning( '-- Error importing post: ' . $post_id->get_error_code() );
 				} else {
-					WP_CLI::log( "-- Imported post as post_id #{$post_id}" );
+					FIN_CLI::log( "-- Imported post as post_id #{$post_id}" );
 				}
 
-				if ( 0 === ( $wpcli_import_counts['current_post'] % 500 ) ) {
+				if ( 0 === ( $fincli_import_counts['current_post'] % 500 ) ) {
 					// @phpstan-ignore function.deprecated
-					WP_CLI\Utils\wp_clear_object_cache();
-					WP_CLI::log( '-- Cleared object cache.' );
+					FIN_CLI\Utils\fin_clear_object_cache();
+					FIN_CLI::log( '-- Cleared object cache.' );
 				}
 			}
 		);
 
 		add_action(
-			'wp_import_insert_term',
+			'fin_import_insert_term',
 			function ( $t, $import_term ) {
-				WP_CLI::log( "-- Created term \"{$import_term['name']}\"" );
+				FIN_CLI::log( "-- Created term \"{$import_term['name']}\"" );
 			},
 			10,
 			2
 		);
 
 		add_action(
-			'wp_import_set_post_terms',
+			'fin_import_set_post_terms',
 			function ( $tt_ids, $term_ids, $taxonomy ) {
-				WP_CLI::log( '-- Added terms (' . implode( ',', $term_ids ) . ") for taxonomy \"{$taxonomy}\"" );
+				FIN_CLI::log( '-- Added terms (' . implode( ',', $term_ids ) . ") for taxonomy \"{$taxonomy}\"" );
 			},
 			10,
 			3
 		);
 
 		add_action(
-			'wp_import_insert_comment',
+			'fin_import_insert_comment',
 			function ( $comment_id ) {
-				global $wpcli_import_counts;
-				$wpcli_import_counts['current_comment']++;
-				WP_CLI::log( sprintf( '-- Added comment #%d (%s of %s)', $comment_id, number_format( $wpcli_import_counts['current_comment'] ), number_format( $wpcli_import_counts['total_comments'] ) ) );
+				global $fincli_import_counts;
+				$fincli_import_counts['current_comment']++;
+				FIN_CLI::log( sprintf( '-- Added comment #%d (%s of %s)', $comment_id, number_format( $fincli_import_counts['current_comment'] ), number_format( $fincli_import_counts['total_comments'] ) ) );
 			}
 		);
 
 		add_action(
 			'import_post_meta',
 			function ( $post_id, $key ) {
-				WP_CLI::log( "-- Added post_meta $key" );
+				FIN_CLI::log( "-- Added post_meta $key" );
 			},
 			10,
 			2
@@ -307,29 +307,29 @@ class Import_Command extends WP_CLI_Command {
 	 * Determines whether the requested importer is available.
 	 */
 	private function is_importer_available() {
-		require_once ABSPATH . 'fp-admin/includes/plugin.php';
+		require_once ABSPATH . 'fin-admin/includes/plugin.php';
 
-		if ( class_exists( 'WP_Import' ) ) {
+		if ( class_exists( 'FIN_Import' ) ) {
 			return true;
 		}
 
 		$plugins            = get_plugins();
 		$wordpress_importer = 'wordpress-importer/wordpress-importer.php';
 		if ( array_key_exists( $wordpress_importer, $plugins ) ) {
-			$error_msg = "WordPress Importer needs to be activated. Try 'fp plugin activate wordpress-importer'.";
+			$error_msg = "WordPress Importer needs to be activated. Try 'fin plugin activate wordpress-importer'.";
 		} else {
-			$error_msg = "WordPress Importer needs to be installed. Try 'fp plugin install wordpress-importer --activate'.";
+			$error_msg = "WordPress Importer needs to be installed. Try 'fin plugin install wordpress-importer --activate'.";
 		}
 
-		return new WP_Error( 'importer-missing', $error_msg );
+		return new FIN_Error( 'importer-missing', $error_msg );
 	}
 
 	/**
 	 * Processes how the authors should be mapped
 	 *
 	 * @param string          $authors_arg The `--author` argument originally passed to command
-	 * @param array<\WP_User> $author_data An array of WP_User-esque author objects
-	 * @return array<\WP_User>|WP_Error Author mapping array if successful, WP_Error if something bad happened
+	 * @param array<\FIN_User> $author_data An array of FIN_User-esque author objects
+	 * @return array<\FIN_User>|FIN_Error Author mapping array if successful, FIN_Error if something bad happened
 	 */
 	private function process_author_mapping( $authors_arg, $author_data ) {
 
@@ -353,7 +353,7 @@ class Import_Command extends WP_CLI_Command {
 				return array();
 
 			default:
-				return new WP_Error( 'invalid-argument', "'authors' argument is invalid." );
+				return new FIN_Error( 'invalid-argument', "'authors' argument is invalid." );
 		}
 	}
 
@@ -363,12 +363,12 @@ class Import_Command extends WP_CLI_Command {
 	private function read_author_mapping_file( $file ) {
 		$author_mapping = array();
 
-		foreach ( new \WP_CLI\Iterators\CSV( $file ) as $i => $author ) {
+		foreach ( new \FIN_CLI\Iterators\CSV( $file ) as $i => $author ) {
 			/**
-			 * @var array<string, \WP_User> $author
+			 * @var array<string, \FIN_User> $author
 			 */
 			if ( ! array_key_exists( 'old_user_login', $author ) || ! array_key_exists( 'new_user_login', $author ) ) {
-				return new WP_Error( 'invalid-author-mapping', "Author mapping file isn't properly formatted." );
+				return new FIN_Error( 'invalid-author-mapping', "Author mapping file isn't properly formatted." );
 			}
 
 			$author_mapping[] = $author;
@@ -380,7 +380,7 @@ class Import_Command extends WP_CLI_Command {
 	/**
 	 * Creates an author mapping file, based on provided author data.
 	 *
-	 * @return WP_Error      The file was just now created, so some action needs to be taken
+	 * @return FIN_Error      The file was just now created, so some action needs to be taken
 	 */
 	private function create_author_mapping_file( $file, $author_data ) {
 
@@ -395,23 +395,23 @@ class Import_Command extends WP_CLI_Command {
 			$file_resource = fopen( $file, 'w' );
 
 			if ( ! $file_resource ) {
-				return new WP_Error( 'author-mapping-error', "Couldn't create author mapping file." );
+				return new FIN_Error( 'author-mapping-error', "Couldn't create author mapping file." );
 			}
 
 			// TODO: Fix $rows type upstream in write_csv()
 			// @phpstan-ignore argument.type
-			\WP_CLI\Utils\write_csv( $file_resource, $author_mapping, array( 'old_user_login', 'new_user_login' ) );
+			\FIN_CLI\Utils\write_csv( $file_resource, $author_mapping, array( 'old_user_login', 'new_user_login' ) );
 
-			return new WP_Error( 'author-mapping-error', sprintf( 'Please update author mapping file before continuing: %s', $file ) );
+			return new FIN_Error( 'author-mapping-error', sprintf( 'Please update author mapping file before continuing: %s', $file ) );
 		} else {
-			return new WP_Error( 'author-mapping-error', "Couldn't create author mapping file." );
+			return new FIN_Error( 'author-mapping-error', "Couldn't create author mapping file." );
 		}
 	}
 
 	/**
 	 * Creates users if they don't exist, and build an author mapping file.
 	 *
-	 * @param array<\WP_User> $author_data
+	 * @param array<\FIN_User> $author_data
 	 */
 	private function create_authors_for_mapping( $author_data ) {
 
@@ -420,7 +420,7 @@ class Import_Command extends WP_CLI_Command {
 
 			if ( isset( $author->user_email ) ) {
 				$user = get_user_by( 'email', $author->user_email );
-				if ( $user instanceof WP_User ) {
+				if ( $user instanceof FIN_User ) {
 					$author_mapping[] = array(
 						'old_user_login' => $author->user_login,
 						'new_user_login' => $user->user_login,
@@ -430,7 +430,7 @@ class Import_Command extends WP_CLI_Command {
 			}
 
 			$user = get_user_by( 'login', $author->user_login );
-			if ( $user instanceof WP_User ) {
+			if ( $user instanceof FIN_User ) {
 				$author_mapping[] = array(
 					'old_user_login' => $author->user_login,
 					'new_user_login' => $user->user_login,
@@ -441,17 +441,17 @@ class Import_Command extends WP_CLI_Command {
 			$user = array(
 				'user_login' => '',
 				'user_email' => '',
-				'user_pass'  => wp_generate_password(),
+				'user_pass'  => fin_generate_password(),
 			);
 			$user = array_merge( $user, (array) $author );
 
-			$user_id = wp_insert_user( $user );
-			if ( is_wp_error( $user_id ) ) {
+			$user_id = fin_insert_user( $user );
+			if ( is_fin_error( $user_id ) ) {
 				return $user_id;
 			}
 
 			/**
-			 * @var \WP_User $user
+			 * @var \FIN_User $user
 			 */
 			$user             = get_user_by( 'id', $user_id );
 			$author_mapping[] = array(
@@ -465,7 +465,7 @@ class Import_Command extends WP_CLI_Command {
 	/**
 	 * Suggests a blog user based on the levenshtein distance.
 	 *
-	 * @return string|\WP_User
+	 * @return string|\FIN_User
 	 */
 	private function suggest_user( $author_user_login, $author_user_email = '' ) {
 

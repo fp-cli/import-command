@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="FP-CLI-import">
-	<description>Custom ruleset for FP-CLI import-command</description>
+<ruleset name="FIN-CLI-import">
+	<description>Custom ruleset for FIN-CLI import-command</description>
 
 	<!--
 	#############################################################################
@@ -24,13 +24,13 @@
 
 	<!--
 	#############################################################################
-	USE THE WP_CLI_CS RULESET
+	USE THE FIN_CLI_CS RULESET
 	#############################################################################
 	-->
 
-	<rule ref="WP_CLI_CS">
+	<rule ref="FIN_CLI_CS">
 		<!-- The two instances which trigger this sniff in this project are example filenames in documentation. -->
-		<exclude name="WordPress.FP.CapitalPDangit" />
+		<exclude name="WordPress.FIN.CapitalPDangit" />
 	</rule>
 
 	<!--
@@ -48,8 +48,8 @@
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
 			<property name="prefixes" type="array">
-				<element value="WP_CLI\Import"/><!-- Namespaces. -->
-				<element value="wpcli_import"/><!-- Global variables and such. -->
+				<element value="FIN_CLI\Import"/><!-- Namespaces. -->
+				<element value="fincli_import"/><!-- Global variables and such. -->
 			</property>
 		</properties>
 	</rule>

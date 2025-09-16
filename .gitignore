@@ -1,5 +1,5 @@
 .DS_Store
-fp-cli.local.yml
+fin-cli.local.yml
 node_modules/
 vendor/
 *.zip

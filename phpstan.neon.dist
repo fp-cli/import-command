@@ -4,7 +4,7 @@ parameters:
     - src
     - import-command.php
   scanDirectories:
-    - vendor/fp-cli/fp-cli/php
+    - vendor/fin-cli/fin-cli/php
     - vendor/wordpress/wordpress-importer/src
   scanFiles:
     - vendor/php-stubs/wordpress-stubs/wordpress-stubs.php

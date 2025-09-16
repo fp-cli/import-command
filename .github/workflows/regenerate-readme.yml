@@ -12,4 +12,4 @@ on:
 
 jobs:
   regenerate-readme:
-    uses: fp-cli/.github/.github/workflows/reusable-regenerate-readme.yml@main
+    uses: fin-cli/.github/.github/workflows/reusable-regenerate-readme.yml@main

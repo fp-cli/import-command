@@ -1,12 +1,12 @@
 <?php
 
-if ( ! class_exists( 'WP_CLI' ) ) {
+if ( ! class_exists( 'FIN_CLI' ) ) {
 	return;
 }
 
-$wpcli_import_autoloader = __DIR__ . '/vendor/autoload.php';
-if ( file_exists( $wpcli_import_autoloader ) ) {
-	require_once $wpcli_import_autoloader;
+$fincli_import_autoloader = __DIR__ . '/vendor/autoload.php';
+if ( file_exists( $fincli_import_autoloader ) ) {
+	require_once $fincli_import_autoloader;
 }
 
-WP_CLI::add_command( 'import', 'Import_Command' );
+FIN_CLI::add_command( 'import', 'Import_Command' );
